@@ -9,6 +9,10 @@ public class PlayerController : MonoBehaviour {
     public GameObject[] playerLives;
     public GameObject playerSpawnPoint;
     public float maxRespawnTime;
+    public AudioClip gameOverClip;
+    public AudioClip deathClip;
+    public AudioSource gameOverSource;
+    public AudioSource deathSource;
 
     public Text gameQuitText;
     public Text gameWonText;
@@ -20,14 +24,19 @@ public class PlayerController : MonoBehaviour {
     private CharacterHealth playerHealth;
     private CharacterMove playerMove;
     private EnemyController enemyController;
-    private float currentRespawnTime;
+    private Timer timerController;
     private bool quitting;
+    private bool winning;
+    private bool deathStarted;
+    private bool handlingRealDeath;
 
 	// Use this for initialization
 	void Start () {
         quitting = false;
+        winning = false;
+        deathStarted = false;
+        handlingRealDeath = false;
         enableUiElements(false);
-        currentRespawnTime = 0;
         CharacterHealth charHealthController = playerPrefab.GetComponent<CharacterHealth>();
         if(charHealthController)
         {
@@ -38,17 +47,18 @@ public class PlayerController : MonoBehaviour {
         playerHealth = player.GetComponent<CharacterHealth>();
         playerMove = player.GetComponent<CharacterMove>();
         enemyController = GetComponent<EnemyController>();
+        timerController = GetComponent<Timer>();
     }
 	
 	// Update is called once per frame
 	void Update () {
-        if (Input.GetKeyDown(KeyCode.Escape) && quitting == false)
+        if (Input.GetKeyDown(KeyCode.Escape) && quitting == false && winning == false)
         {
             quitting = true;
             DoQuit();
             return;
         }
-        if (Input.GetKeyDown(KeyCode.Escape) && quitting == true)
+        if (Input.GetKeyDown(KeyCode.Escape) && quitting == true && winning == false)
         {
             quitting = false;
             DoResume();
@@ -64,23 +74,18 @@ public class PlayerController : MonoBehaviour {
             }
             return;
         }
-        if (playerHealth.realDead)
+        if (playerHealth.realDead && !handlingRealDeath)
         {
+            handlingRealDeath = true;
+            gameOverSource.PlayOneShot(gameOverClip);
+            player.SetActive(false);
             DoGameOver();
             return;
         }
-	    if (playerHealth.dead)
+	    if (playerHealth.dead && !deathStarted && !handlingRealDeath)
         {
-            if(currentRespawnTime <= 0)
-            {
-                currentRespawnTime = maxRespawnTime;
-            }
-            currentRespawnTime -= Time.deltaTime;
-            if (currentRespawnTime <= 0)
-            {
-                RespawnPlayer();
-                currentRespawnTime = 0;
-            }
+            deathStarted = true;
+            StartCoroutine("HandleDeathCoroutine");
         }
 	}
 
@@ -93,15 +98,18 @@ public class PlayerController : MonoBehaviour {
         player.SetActive(true);
     }
 
-    void DoGameOver()
+    void DoGameOver  ()
     {
         gameOverText.gameObject.SetActive(true);
         restartButton.gameObject.SetActive(true);
         quitButton.gameObject.SetActive(true);
+        timerController.StopTimer();
     }
 
     void DoGameWon()
     {
+        winning = true;
+        timerController.StopTimer();
         gameWonText.gameObject.SetActive(true);
         restartButton.gameObject.SetActive(true);
         quitButton.gameObject.SetActive(true);
@@ -127,9 +135,15 @@ public class PlayerController : MonoBehaviour {
         playerHealth.lives = playerLives;
         playerHealth.RefillLives();
         RespawnPlayer();
+        playerMove.enabled = true;
         playerHealth.realDead = false;
+        handlingRealDeath = false;
+        deathStarted = false;
+        quitting = false;
+        winning = false;
         enemyController.RecreateAllEnemies();
         enableUiElements(false);
+        timerController.ResetTimer();
     }
 
     public void OnQuitClick()
@@ -139,6 +153,7 @@ public class PlayerController : MonoBehaviour {
 
     void DoQuit()
     {
+        timerController.StopTimer();
         player.SetActive(false);
         gameQuitText.gameObject.SetActive(true);
         restartButton.gameObject.SetActive(true);
@@ -149,5 +164,25 @@ public class PlayerController : MonoBehaviour {
     {
         player.SetActive(true);
         enableUiElements(false);
+        timerController.ResumeTimer();
+    }
+
+    IEnumerator HandleDeathCoroutine()
+    {
+        playerMove.enabled = false;
+        timerController.StopTimer();
+        player.GetComponent<Renderer>().enabled = false;
+        playerHealth.audioSource.PlayOneShot(deathClip);
+        while (playerHealth.audioSource.isPlaying)
+        {
+            yield return null;
+        }
+        player.SetActive(false);
+        yield return new WaitForSeconds(1f);
+        RespawnPlayer();
+        playerMove.enabled = true;
+        player.GetComponent<Renderer>().enabled = true;
+        timerController.ResumeTimer();
+        deathStarted = false;
     }
 }

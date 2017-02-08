@@ -3,6 +3,9 @@ using System.Collections;
 
 public class EnemyMove : MonoBehaviour {
 
+    public AudioClip hitSound;
+    public AudioClip moveSound;
+    public AudioClip deathSound;
     public float moveSpeed;
     public float health;
     public float damage;
@@ -10,8 +13,10 @@ public class EnemyMove : MonoBehaviour {
     public string myName;
 
     private int move;
+    private AudioSource audioSource;
 	// Use this for initialization
 	void Start () {
+        audioSource = GetComponent<AudioSource>();
         dead = false;
         move = -1;
 	}
@@ -45,23 +50,37 @@ public class EnemyMove : MonoBehaviour {
             if(character)
             {
                 DoDamage(character);
+                Rigidbody2D body = GetComponent<Rigidbody2D>();
+                body.AddForce(new Vector2(1, 1));
             }
         }
     }
 
     public void TakeDamage(float damage)
     {
+        audioSource.PlayOneShot(hitSound, 0.5f);
         health -= damage;
         if (health <=0)
         {
+            DoDeath();
             dead = true;
             //gameObject.SetActive(false);
         }
     }
 
+    public void DoDeath()
+    {
+        audioSource.PlayOneShot(deathSound, 0.5f);
+    }
+
     void DoDamage(CharacterHealth character)
     {
         character.TakeDamage(damage);
+    }
+
+    public bool IsSoundPlaying()
+    {
+        return audioSource.isPlaying;
     }
 
 }

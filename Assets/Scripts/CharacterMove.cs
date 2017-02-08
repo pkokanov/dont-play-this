@@ -3,6 +3,7 @@ using System.Collections;
 
 public class CharacterMove : MonoBehaviour {
 
+    public AudioSource moveSound;
     public float moveSpeed;
     public float jumpForce;
     public bool goalReached;

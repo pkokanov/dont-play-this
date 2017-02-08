@@ -5,16 +5,26 @@ public class Shoot : MonoBehaviour
 {
 
     public Rigidbody2D bullet;
+    public AudioClip audioClip;
     public float bulletSpeed;
     public GameObject marker;
     public float rotationAngle;
     public float shootCooldown;
 
     private Vector3 shootDirection;
+    public AudioSource audioSource;
     private float markerDistance;
     private bool shot;
     private float cooldownTimer;
     private bool rotated;
+    private float audioHighVol = 1f;
+    private float audioLowVol = 0.5f;
+
+    void Awake()
+    {
+
+    }
+
     // Use this for initialization
     void Start()
     {
@@ -62,6 +72,8 @@ public class Shoot : MonoBehaviour
             Vector3 muzzle = transform.position + Vector3.ClampMagnitude(shootDirection, shootDirection.magnitude/4);
             Rigidbody2D body = Instantiate(bullet, muzzle, transform.rotation) as Rigidbody2D;
             body.AddForce(shootDirection * bulletSpeed, ForceMode2D.Force);
+            float volume = Random.Range(audioLowVol, audioHighVol);
+            audioSource.PlayOneShot(audioClip, volume);
             shot = false;
         }
     }

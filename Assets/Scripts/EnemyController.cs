@@ -40,7 +40,7 @@ public class EnemyController : MonoBehaviour {
             EnemyMove enemyControl = enemy.GetComponent<EnemyMove>();
             if(!enemyControl)
                 break;
-            if(enemyControl.dead)
+            if(enemyControl.dead && !enemyControl.IsSoundPlaying())
             {
                 currentEnemies--;
                 if (enemyControl.myName == "Enemy1") {

@@ -3,6 +3,7 @@ using System.Collections;
 
 public class Bullet : MonoBehaviour {
 
+    public AudioSource bulletSound;
     public float damage;
     public float maxDuration;
 	// Use this for initialization
