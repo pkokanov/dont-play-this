@@ -172,6 +172,7 @@ public class PlayerController : MonoBehaviour {
         playerMove.enabled = false;
         timerController.StopTimer();
         player.GetComponent<Renderer>().enabled = false;
+        player.GetComponent<Shoot>().enabled = false;
         playerHealth.audioSource.PlayOneShot(deathClip);
         while (playerHealth.audioSource.isPlaying)
         {
@@ -182,6 +183,7 @@ public class PlayerController : MonoBehaviour {
         RespawnPlayer();
         playerMove.enabled = true;
         player.GetComponent<Renderer>().enabled = true;
+        player.GetComponent<Shoot>().enabled = true;
         timerController.ResumeTimer();
         deathStarted = false;
     }
